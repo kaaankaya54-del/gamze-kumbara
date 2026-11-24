@@ -785,12 +785,12 @@ function setupHTML(){
     <p class="ink2" style="font-size:.9rem;margin:4px 0 6px">Bildiklerimizi doldurdum, kontrol edip “Kur”a dokunman yeterli. Sonra hepsi Plan’dan değişir.</p>
     <div class="sec"><h4>💼 Maaş</h4><div class="two"><div><label>Aylık net maaş ₺ (sabit kısım)</label><input class="input" id="suSal" inputmode="decimal" placeholder="ör. 35.000"></div><div><label>Yattığı gün</label><input class="input" id="suPay" type="number" min="1" max="28" value="10"></div></div>
       <p class="hint">Primleri geldikçe “Gelir → Ek gelir” olarak eklersin. Hesaplar maaştan maaşa (10’undan 9’una) yapılır.</p></div>
-    ${cardRow(0,'Garanti',5000,4,14)}
-    <p class="hint" style="margin-top:-4px">Garanti’nin son ödeme gününü ekstreden kontrol et; 14 tahmini.</p>
-    ${cardRow(1,'Akbank',4000,8,18)}
+    ${cardRow(0,'','','','')}
+    <p class="hint" style="margin-top:-4px">Kesim ve son ödeme günlerini kart ekstresinden bakabilirsin. Kartın yoksa boş bırak.</p>
+    ${cardRow(1,'','','','')}
     <div class="sec"><h4>🤍 Planlı ödemeler</h4>
-      <div class="grid3"><div><label>Ad</label><input class="input" id="suP0n" value="Anneme ödeme"></div><div><label>Tutar ₺</label><input class="input" id="suP0a" inputmode="decimal" value="7.000"></div><div><label>Tarih</label><input class="input" id="suP0d" type="date" value="${dec}-10"></div></div>
-      <div class="grid3" style="margin-top:6px"><div><input class="input" id="suP1n" value="Anneme ödeme"></div><div><input class="input" id="suP1a" inputmode="decimal" value="5.000"></div><div><input class="input" id="suP1d" type="date" value="${jan}-10"></div></div>
+      <div class="grid3"><div><label>Ad</label><input class="input" id="suP0n" placeholder="ör. Taksit"></div><div><label>Tutar ₺</label><input class="input" id="suP0a" inputmode="decimal" placeholder="₺"></div><div><label>Tarih</label><input class="input" id="suP0d" type="date"></div></div>
+      <div class="grid3" style="margin-top:6px"><div><input class="input" id="suP1n" placeholder="ör. Taksit"></div><div><input class="input" id="suP1a" inputmode="decimal" placeholder="₺"></div><div><input class="input" id="suP1d" type="date"></div></div>
       <p class="hint">Bu ödemeler o dönemin “kalan” hesabından baştan düşülür, böylece sürpriz olmaz.</p></div>
     <div class="sec"><label class="check" style="margin-top:0"><input type="checkbox" id="suSave" checked> Maaş yatınca %20’sini “Acil durum fonu”na ayır</label>
       <p class="hint">Her dönem tek dokunuşla eklenir. İlk hedef: yaklaşık 3 aylık maaş.</p></div>
@@ -862,7 +862,7 @@ function vPlan(){
   const PL=(S.config.planned||[]).slice().sort((a,b)=>a.d.localeCompare(b.d));
   h+=`<h2>Planlı ödemeler<span class="sub">tek seferlik</span></h2><div class="card">
     ${PL.length?PL.map(p=>`<div class="row"><span class="ic">${p.done?'✓':'🤍'}</span><span class="nm">${esc(p.name)}<small>${fmtDay(p.d)} ${p.d.slice(0,4)}${p.done?' · ödendi':''}</small></span><b class="num">${tl(p.a)}</b><button class="linkbtn" style="color:var(--bad)" data-act="delPlan" data-id="${p.id}">Sil</button></div>`).join(''):'<p class="muted" style="font-size:.88rem">Planlı ödeme yok.</p>'}
-    <div class="grid3" style="display:grid;grid-template-columns:1.3fr 1fr 1.1fr;gap:6px;margin-top:10px"><input class="input" id="plName" placeholder="ör. Anneme ödeme"><input class="input" id="plAmt" inputmode="decimal" placeholder="₺"><input class="input" id="plDate" type="date"></div>
+    <div class="grid3" style="display:grid;grid-template-columns:1.3fr 1fr 1.1fr;gap:6px;margin-top:10px"><input class="input" id="plName" placeholder="ör. Taksit"><input class="input" id="plAmt" inputmode="decimal" placeholder="₺"><input class="input" id="plDate" type="date"></div>
     <div class="err" id="plErr" style="min-height:0"></div><div class="btns" style="margin-top:6px"><button class="btn ghost" data-act="addPlan">Planlı ödeme ekle</button></div></div>`;
   h+=`<h2>Aylık bütçe limitleri<span class="sub">kategori başına</span></h2><div class="card" style="padding:4px 16px">` +
     CATS.expense.map(c=>`<div class="row"><span class="ic">${c.icon}</span><span class="nm">${esc(c.name)}<small>${c.kind==='need'?'Zorunlu':'İstek'}${stats(cur).byCat[c.id]?' · bu ay '+tl(stats(cur).byCat[c.id]):''}</small></span><input class="mini num" inputmode="decimal" data-budget="${c.id}" value="${S.config.budgets[c.id]?Number(S.config.budgets[c.id]).toLocaleString('tr-TR'):''}" placeholder="—" aria-label="${esc(c.name)} limiti"></div>`).join('') +
@@ -1013,10 +1013,10 @@ function demoData(){
   const rKira={id:uid(),t:'expense',c:'kira',a:16500,day:1,n:'Kira'}, rMaas={id:uid(),t:'income',c:'maas',a:52000,day:10,n:'Maaş'}, rNet={id:uid(),t:'expense',c:'abonelik',a:229,day:8,n:'Netflix'}, rSp={id:uid(),t:'expense',c:'abonelik',a:99,day:12,n:'Spotify'}, rFat={id:uid(),t:'expense',c:'fatura',a:1450,day:15,n:'İnternet + telefon'};
   conf.recurring=[rMaas,rKira,rFat,rNet,rSp];
   conf.payday=10; conf.setupDone=true;
-  const gC={id:uid(),name:'Garanti',limit:5000,cut:4,due:14}, aC={id:uid(),name:'Akbank',limit:4000,cut:8,due:18};
+  const gC={id:uid(),name:'Kart 1',limit:5000,cut:4,due:14}, aC={id:uid(),name:'Kart 2',limit:4000,cut:8,due:18};
   gC.paid=lastCut(gC); aC.paid=cutOn(aC,addMonths(mkOf(lastCut(aC)),-1));
   conf.cards=[gC,aC];
-  const dec=nextMonthOf(12); conf.planned=[{id:uid(),name:'Anneme ödeme',a:7000,d:dec+'-10',c:'borc',done:false},{id:uid(),name:'Anneme ödeme',a:5000,d:addMonths(dec,1)+'-10',c:'borc',done:false}];
+  const dec=nextMonthOf(12); conf.planned=[{id:uid(),name:'Planlı ödeme',a:7000,d:dec+'-10',c:'borc',done:false},{id:uid(),name:'Planlı ödeme',a:5000,d:addMonths(dec,1)+'-10',c:'borc',done:false}];
   conf.budgets={kira:16500,fatura:3200,market:7000,ulasim:2000,yemek:3500,bulusma:2000,giyim:2500,bakim:1200,eglence:1800,abonelik:400};
   conf.wish=[{id:uid(),name:'Bordo deri çanta',price:3400,added:Date.now()-8*86400000},{id:uid(),name:'Beyaz sneaker',price:2700,added:Date.now()-3*86400000}];
   let seed=7; const rnd=()=>{ seed=(seed*9301+49297)%233280; return seed/233280; };
